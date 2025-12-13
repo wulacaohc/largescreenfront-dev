@@ -44,19 +44,29 @@ const handleMessage = (newData) => {
   // if (props.startTime || props.endTime) {
   //   return
   // }
+  console.log('采用实时模式，使用websocket')
   console.log('left-message')
   const parseData = JSON.parse(newData)
   console.log('Parsed data:', parseData) // 添加这行查看解析后的数据
   if(parseData && isObject(parseData)){
-    if (parseData.device_list && parseData.device_list.length) {
-      console.log('Device list:', parseData.device_list) // 添加这行查看设备列
-      let arr = parseData.device_list.map(v => {
+    console.log('isObject check passed') // 添加这行
+    // 修改这里，检查 device_data 而不是 device_list
+    // console.log('device_data exists:', parseData.device_data)
+    // console.log('device_data length:', parseData.device_data?.length)
+    // if (parseData.device_list && parseData.device_list.length) {
+    //   console.log('Device list:', parseData.device_list) // 添加这行查看设备列
+    // 修改这里，使用 device_data 而不是 device_list
+    if (parseData.device_data && parseData.device_data.length) {
+      console.log('Device data:', parseData.device_data)
+      let arr = parseData.device_data.map(v => {
         return {
           ...v,
           absoluteTime: initTime.value
         }
       })
+      console.log('Processed array:', arr)  // 添加这行
       sourceData.value=arr
+      console.log('SourceData updated:', sourceData.value)  // 添加这行
       initTime.value=initTime.value+1
     }
   }
@@ -105,9 +115,9 @@ const getNotDBCList = () => {
   })
 }
 const getDetail = () => {
-  // console.log('props.startTime', props.startTime)
-  // console.log('props.endTime', props.endTime)
-  // console.log('searchTime', props.searchTime, props.searchTime.startTime)
+  console.log('props.startTime', props.startTime)
+  console.log('props.endTime', props.endTime)
+  console.log('searchTime', props.searchTime, props.searchTime.startTime)
 
   if (!uploadDbcFlag.value) {
     getNotDBCList()
@@ -115,12 +125,14 @@ const getDetail = () => {
     // 实时模式下不再定时请求数据，完全依赖WebSocket
     if (isRealTimeMode.value) {
       // 实时模式由WebSocket驱动，不需要主动请求
+
       return;
     }
     getSensorList(
         { search: props.deviceId, startTime: props.searchTime.startTime, endTime: props.searchTime.now },
     ).then(res => {
       // 历史模式下请求数据
+      console.log('采用时间范围，查询历史模式')
       if (res.code == 200) {
         if (!initTime.value) {
           initTime.value = res.data.result[0].messageTime / 1000
@@ -140,38 +152,23 @@ const getDetail = () => {
 watch(() => props.keyword, () => {
   search.value = props.keyword
   getDetail()
-  // timer = setInterval(getDetail, 1000);
 
-  // 只在非实时模式下设置定时器
+  // 只在非实时模式下设置定时器,清除之前的定时器
   if (timer) {
     clearInterval(timer)
     timer = null
   }
-  // // 对于未导入DBC的情况，仍然需要设置定时器
-  // if (!uploadDbcFlag.value || !isRealTimeMode.value) {
-  //   timer = setInterval(getDetail, 1000);
-  // }
 
-  // 设置新的定时器
-  timer = setInterval(getDetail, 1000);
-});
+
+  // 只在需要轮询的情况下设置定时器:
+  // 1. 未导入DBC文件时
+  // 2. 已导入DBC但处于历史模式时
+  if (!uploadDbcFlag.value || (!isRealTimeMode.value && uploadDbcFlag.value)) {
+    timer = setInterval(getDetail, 1000)
+  }
+})
 
 // 添加对时间范围的监听
-// watch([() => props.startTime, () => props.endTime], ([newStartTime, newEndTime]) => {
-//   // 当切换到实时模式时清除定时器
-//   if (!newStartTime && !newEndTime && uploadDbcFlag.value) {
-//     if (timer) {
-//       clearInterval(timer)
-//       timer = null;
-//     }
-//   } else {
-//     // 当切换到历史模式时启动定时器
-//     if (!timer) {
-//       timer = setInterval(getDetail, 1000);
-//     }
-//   }
-// });
-
 // 修正时间范围监听逻辑
 watch([() => props.startTime, () => props.endTime], ([newStartTime, newEndTime]) => {
   // 清除之前的定时器
@@ -281,6 +278,7 @@ const initSelectedItems = () => {
 const toggleSelect = (itemId, targetIndex, item) => {
  if (!item.selected) {
    item.selected = true
+
    sendMessage(JSON.stringify({
      type: 'sub',
      sensorCode: item.sensorCode + '_' + item.messageId
