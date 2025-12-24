@@ -45,11 +45,11 @@ const handleMessage = (newData) => {
   //   return
   // }
   console.log('采用实时模式，使用websocket')
-  console.log('left-message')
+  // console.log('left-message')
   const parseData = JSON.parse(newData)
-  console.log('Parsed data:', parseData) // 添加这行查看解析后的数据
+  // console.log('Parsed data:', parseData) // 添加这行查看解析后的数据
   if(parseData && isObject(parseData)){
-    console.log('isObject check passed') // 添加这行
+    // console.log('isObject check passed') // 添加这行
     // 修改这里，检查 device_data 而不是 device_list
     // console.log('device_data exists:', parseData.device_data)
     // console.log('device_data length:', parseData.device_data?.length)
@@ -64,9 +64,9 @@ const handleMessage = (newData) => {
           absoluteTime: initTime.value
         }
       })
-      console.log('Processed array:', arr)  // 添加这行
+      // console.log('Processed array:', arr)  // 添加这行
       sourceData.value=arr
-      console.log('SourceData updated:', sourceData.value)  // 添加这行
+      // console.log('SourceData updated:', sourceData.value)  // 添加这行
       initTime.value=initTime.value+1
     }
   }
@@ -115,9 +115,9 @@ const getNotDBCList = () => {
   })
 }
 const getDetail = () => {
-  console.log('props.startTime', props.startTime)
-  console.log('props.endTime', props.endTime)
-  console.log('searchTime', props.searchTime, props.searchTime.startTime)
+  // console.log('props.startTime', props.startTime)
+  // console.log('props.endTime', props.endTime)
+  // console.log('searchTime', props.searchTime, props.searchTime.startTime)
 
   if (!uploadDbcFlag.value) {
     getNotDBCList()

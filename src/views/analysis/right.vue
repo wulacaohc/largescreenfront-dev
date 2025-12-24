@@ -82,65 +82,161 @@ const handleMessage = (message: any) => {
     return
   }
 
+  console.log('进入步骤，可以实时显示数据了')
+
   const gotData = message ? JSON.parse(message.data) :[];
-  if (gotData.device_info) {
+  console.log('WebSocket连接对象:', props.ws);
+  console.log('原始message对象:', message);
+  console.log('message.data类型:', typeof message.data);
 
-    // 先处理时间
-    const ts = Object.values(gotData.device_info)[0] && Object.values(gotData.device_info)[0].ts
-    if (!ts) return
+  console.log('接收到的WebSocket数据:', gotData)
 
-    // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
-    if (pointList.value.indexOf(ts) > -1) return
+  // if (gotData.device_info) {
+  //   console.log('存在device_info')
+  //
+  //   // 先处理时间
+  //   const ts = Object.values(gotData.device_info)[0] && Object.values(gotData.device_info)[0].ts
+  //   // if (!ts) return
+  //   console.log('提取的时间戳:', ts)
+  //   if (!ts) {
+  //     console.log('时间戳不存在，返回')
+  //     return
+  //   }
+  //
+  //   // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
+  //   // if (pointList.value.indexOf(ts) > -1) return
+  //   if (pointList.value.indexOf(ts) > -1) {
+  //     console.log('时间戳已存在，返回')
+  //     return
+  //   }
+  //
+  //   console.log('准备处理传感器数据')
+  //   if (showWebsocketNewData.value) {
+  //     if (props.pushIndex <= 60) {
+  //       pointList.value[props.pushIndex] = ts
+  //     }   else {
+  //       pointList.value.push(ts)
+  //     }
+  //
+  //   }
+  //
+  //   // else {
+  //   //   xStore.value.push(ts)
+  //   // }
+  //
+  //
+  //   // 若干曲线
+  //   props.sensorCodes.forEach((sensorCode) => {
+  //
+  //     if (gotData.device_info[sensorCode]) {
+  //       if (!series.value[sensorCode]) {
+  //         pointList.value = new Array(Math.max(props.pushIndex, 60)).fill(0).map((_) => '')
+  //         series.value[sensorCode] = {
+  //           list: props.pushIndex > 1 ? new Array(Math.max(Number(props.pushIndex) - 1, 1)).fill(1).map((_, i) => null) : [],
+  //         };
+  //       }
+  //
+  //
+  //       series.value[sensorCode] = {
+  //         name: sensorCode,
+  //         ...series.value[sensorCode], // 原始数据
+  //         ...gotData.device_info[sensorCode], // 更新数据
+  //       }
+  //       if (showWebsocketNewData.value) {
+  //         series.value[sensorCode]['list'].push(gotData.device_info[sensorCode]?.sensorValue)
+  //       } else {
+  //         if (!storeMap.value[sensorCode]) {
+  //           storeMap.value[sensorCode] = []
+  //         }
+  //         storeMap.value[sensorCode].push(gotData.device_info[sensorCode]?.sensorValue)
+  //       }
+  //     } else {
+  //       // 如果没推，就看之前有没有
+  //       // 之前有，就推null,没有就不推
+  //       // if(series.value[sensorCode]) {
+  //       //   series.value[sensorCode].list.push(null)
+  //       // }
+  //     }
+  //
+  //   })
 
+// 修改为 - 根据实际数据结构处理传感器数据
+  if (gotData.device_data) {
+    // 处理 device_data 数组
+    gotData.device_data.forEach((deviceItem: any) => {
+      // 使用 messageTime 作为时间戳
+      const timestamp = deviceItem.messageTime;
+      if (!timestamp) return;
 
-    if (showWebsocketNewData.value) {
-      if (props.pushIndex <= 60) {
-        pointList.value[props.pushIndex] = ts
-      }   else {
-        pointList.value.push(ts)
+      // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
+      if (pointList.value.indexOf(timestamp) > -1) {
+        console.log('时间戳已存在，返回')
+        return
       }
 
-    }
-
-    // else {
-    //   xStore.value.push(ts)
-    // }
-
-
-    // 若干曲线
-    props.sensorCodes.forEach((sensorCode) => {
-
-      if (gotData.device_info[sensorCode]) {
-        if (!series.value[sensorCode]) {
-          pointList.value = new Array(Math.max(props.pushIndex, 60)).fill(0).map((_) => '')
-          series.value[sensorCode] = {
-            list: props.pushIndex > 1 ? new Array(Math.max(Number(props.pushIndex) - 1, 1)).fill(1).map((_, i) => null) : [],
-          };
-        }
-
-
-        series.value[sensorCode] = {
-          name: sensorCode,
-          ...series.value[sensorCode], // 原始数据
-          ...gotData.device_info[sensorCode], // 更新数据
-        }
-        if (showWebsocketNewData.value) {
-          series.value[sensorCode]['list'].push(gotData.device_info[sensorCode]?.sensorValue)
+      // 更新时间戳列表
+      if (showWebsocketNewData.value) {
+        if (props.pushIndex <= 60) {
+          pointList.value[props.pushIndex] = timestamp
         } else {
-          if (!storeMap.value[sensorCode]) {
-            storeMap.value[sensorCode] = []
-          }
-          storeMap.value[sensorCode].push(gotData.device_info[sensorCode]?.sensorValue)
+          pointList.value.push(timestamp)
         }
-      } else {
-        // 如果没推，就看之前有没有
-        // 之前有，就推null,没有就不推
-        // if(series.value[sensorCode]) {
-        //   series.value[sensorCode].list.push(null)
-        // }
       }
 
+// 处理传感器数据 - 遍历 sensors 数组
+      if (deviceItem.sensors && Array.isArray(deviceItem.sensors)) {
+        deviceItem.sensors.forEach((sensor: any) => {
+          // 使用正确的字段名
+          const sensorName = sensor.sensorCode;
+
+          if (sensorName) {
+            // 检查传感器是否在需要显示的列表中 - 使用更灵活的匹配方式
+            const matchedSensorCode = props.sensorCodes.find(code =>
+                code.includes(sensorName) || sensorName.includes(code) || code === sensorName
+            );
+
+            if (matchedSensorCode) {
+              const code = matchedSensorCode;
+
+              if (!series.value[code]) {
+                pointList.value = new Array(Math.max(props.pushIndex, 60)).fill(0).map((_) => '')
+                series.value[code] = {
+                  list: props.pushIndex > 1 ? new Array(Math.max(Number(props.pushIndex) - 1, 1)).fill(1).map((_, i) => null) : [],
+                };
+              }
+
+              // 获取传感器值
+              const sensorValue = sensor.sensorValue !== undefined ? sensor.sensorValue :
+                  sensor.value !== undefined ? sensor.value :
+                      sensor.data;
+
+              series.value[code] = {
+                name: code,
+                ...series.value[code],
+                ts: timestamp,
+                sensorValue: sensorValue,
+                sensorName: sensorName,
+                sensorUnit: sensor.sensorUnit || sensor.unit
+              }
+
+              if (showWebsocketNewData.value) {
+                series.value[code]['list'].push(sensorValue)
+              } else {
+                if (!storeMap.value[code]) {
+                  storeMap.value[code] = []
+                }
+                storeMap.value[code].push(sensorValue)
+              }
+            } else {
+              // 调试日志：输出传感器信息以帮助调试
+              console.log('传感器未匹配:', sensorName, '期望的传感器:', props.sensorCodes);
+            }
+          }
+        });
+      }
     })
+  }
+
 
     if (!showWebsocketNewData.value) {
       return
@@ -180,7 +276,10 @@ const handleMessage = (message: any) => {
     chartData.value.series = seriesData
     updateChart();
   }
-}
+
+
+
+
 
 
 watch(() => props.ws, (nv) => {
