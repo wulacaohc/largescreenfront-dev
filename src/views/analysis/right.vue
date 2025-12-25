@@ -75,8 +75,12 @@ const setShowWebsocketNewData = (value: boolean) => {
     pointList.value.splice(props.pushIndex, 0, ...xStore.value)
   }
 }
+// 在组件响应式变量定义部分添加
+const lastTimestampAdded = ref<number>(0); // 记录最后添加时间戳的时间
+const ONE_SECOND = 1000; // 1秒 = 1000毫秒
 
-
+// 使用 Set 提高查找效率并确保唯一性
+const timestampSet = new Set<string>();
 const handleMessage = (message: any) => {
   if (props.searchTime.startTime || props.searchTime.endTime) {
     return
@@ -85,11 +89,11 @@ const handleMessage = (message: any) => {
   console.log('进入步骤，可以实时显示数据了')
 
   const gotData = message ? JSON.parse(message.data) :[];
-  console.log('WebSocket连接对象:', props.ws);
-  console.log('原始message对象:', message);
-  console.log('message.data类型:', typeof message.data);
-
-  console.log('接收到的WebSocket数据:', gotData)
+  // console.log('WebSocket连接对象:', props.ws);
+  // console.log('原始message对象:', message);
+  // console.log('message.data类型:', typeof message.data);
+  //
+  // console.log('接收到的WebSocket数据:', gotData)
 
   // if (gotData.device_info) {
   //   console.log('存在device_info')
@@ -168,18 +172,45 @@ const handleMessage = (message: any) => {
       const timestamp = deviceItem.messageTime;
       if (!timestamp) return;
 
-      // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
-      if (pointList.value.indexOf(timestamp) > -1) {
-        console.log('时间戳已存在，返回')
-        return
+      // 检查是否已处理该时间戳
+      if (timestampSet.has(timestamp)) {
+        console.log('时间戳已存在，跳过处理:', timestamp);
+        return;
       }
+      // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
+      // if (pointList.value.indexOf(timestamp) > -1) {
+      //   console.log('时间戳已存在于 pointList，返回');
+      //   return
+      // }
 
+      // // 更新时间戳列表
+      // if (showWebsocketNewData.value) {
+      //   if (props.pushIndex <= 60) {
+      //     pointList.value[props.pushIndex] = timestamp
+      //   } else {
+      //     console.log('增加一次时间：(timestamp)', timestamp)
+      //     pointList.value.push(timestamp)
+      //   }
+      // }
+
+      // 修改后的handleMessage函数中的时间戳处理部分
       // 更新时间戳列表
       if (showWebsocketNewData.value) {
+        const currentTime = Date.now();
+
         if (props.pushIndex <= 60) {
-          pointList.value[props.pushIndex] = timestamp
+          pointList.value[props.pushIndex] = timestamp;
+          timestampSet.add(timestamp);
         } else {
-          pointList.value.push(timestamp)
+          // 检查距离上次添加时间戳是否超过1秒
+          if (currentTime - lastTimestampAdded.value >= ONE_SECOND) {
+            console.log('增加一次时间：(timestamp)', timestamp);
+            pointList.value.push(timestamp);
+            timestampSet.add(timestamp);
+            lastTimestampAdded.value = currentTime; // 更新最后添加时间
+          } else {
+            console.log('时间间隔不足1秒，跳过添加时间戳');
+          }
         }
       }
 
@@ -229,7 +260,7 @@ const handleMessage = (message: any) => {
               }
             } else {
               // 调试日志：输出传感器信息以帮助调试
-              console.log('传感器未匹配:', sensorName, '期望的传感器:', props.sensorCodes);
+              // console.log('传感器未匹配:', sensorName, '期望的传感器:', props.sensorCodes);
             }
           }
         });
