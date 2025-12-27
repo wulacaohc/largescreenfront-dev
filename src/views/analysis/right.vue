@@ -62,7 +62,9 @@ const series = ref({})
 
 const setShowWebsocketNewData = (value: boolean) => {
   showWebsocketNewData.value = value
-
+  nextTick(() => {
+    emit('isZooming', value)
+  })
   if (!value) {
     storeMap.value = {}
     xStore.value = []
@@ -89,80 +91,7 @@ const handleMessage = (message: any) => {
   console.log('进入步骤，可以实时显示数据了')
 
   const gotData = message ? JSON.parse(message.data) :[];
-  // console.log('WebSocket连接对象:', props.ws);
-  // console.log('原始message对象:', message);
-  // console.log('message.data类型:', typeof message.data);
-  //
-  // console.log('接收到的WebSocket数据:', gotData)
 
-  // if (gotData.device_info) {
-  //   console.log('存在device_info')
-  //
-  //   // 先处理时间
-  //   const ts = Object.values(gotData.device_info)[0] && Object.values(gotData.device_info)[0].ts
-  //   // if (!ts) return
-  //   console.log('提取的时间戳:', ts)
-  //   if (!ts) {
-  //     console.log('时间戳不存在，返回')
-  //     return
-  //   }
-  //
-  //   // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
-  //   // if (pointList.value.indexOf(ts) > -1) return
-  //   if (pointList.value.indexOf(ts) > -1) {
-  //     console.log('时间戳已存在，返回')
-  //     return
-  //   }
-  //
-  //   console.log('准备处理传感器数据')
-  //   if (showWebsocketNewData.value) {
-  //     if (props.pushIndex <= 60) {
-  //       pointList.value[props.pushIndex] = ts
-  //     }   else {
-  //       pointList.value.push(ts)
-  //     }
-  //
-  //   }
-  //
-  //   // else {
-  //   //   xStore.value.push(ts)
-  //   // }
-  //
-  //
-  //   // 若干曲线
-  //   props.sensorCodes.forEach((sensorCode) => {
-  //
-  //     if (gotData.device_info[sensorCode]) {
-  //       if (!series.value[sensorCode]) {
-  //         pointList.value = new Array(Math.max(props.pushIndex, 60)).fill(0).map((_) => '')
-  //         series.value[sensorCode] = {
-  //           list: props.pushIndex > 1 ? new Array(Math.max(Number(props.pushIndex) - 1, 1)).fill(1).map((_, i) => null) : [],
-  //         };
-  //       }
-  //
-  //
-  //       series.value[sensorCode] = {
-  //         name: sensorCode,
-  //         ...series.value[sensorCode], // 原始数据
-  //         ...gotData.device_info[sensorCode], // 更新数据
-  //       }
-  //       if (showWebsocketNewData.value) {
-  //         series.value[sensorCode]['list'].push(gotData.device_info[sensorCode]?.sensorValue)
-  //       } else {
-  //         if (!storeMap.value[sensorCode]) {
-  //           storeMap.value[sensorCode] = []
-  //         }
-  //         storeMap.value[sensorCode].push(gotData.device_info[sensorCode]?.sensorValue)
-  //       }
-  //     } else {
-  //       // 如果没推，就看之前有没有
-  //       // 之前有，就推null,没有就不推
-  //       // if(series.value[sensorCode]) {
-  //       //   series.value[sensorCode].list.push(null)
-  //       // }
-  //     }
-  //
-  //   })
 
 // 修改为 - 根据实际数据结构处理传感器数据
   if (gotData.device_data) {
@@ -177,21 +106,6 @@ const handleMessage = (message: any) => {
         console.log('时间戳已存在，跳过处理:', timestamp);
         return;
       }
-      // 如果查到的数据点之前有了。也就不往里推入了。---解决数据曲线出现平台的问题
-      // if (pointList.value.indexOf(timestamp) > -1) {
-      //   console.log('时间戳已存在于 pointList，返回');
-      //   return
-      // }
-
-      // // 更新时间戳列表
-      // if (showWebsocketNewData.value) {
-      //   if (props.pushIndex <= 60) {
-      //     pointList.value[props.pushIndex] = timestamp
-      //   } else {
-      //     console.log('增加一次时间：(timestamp)', timestamp)
-      //     pointList.value.push(timestamp)
-      //   }
-      // }
 
       // 修改后的handleMessage函数中的时间戳处理部分
       // 更新时间戳列表
@@ -278,16 +192,16 @@ const handleMessage = (message: any) => {
     }
 
     Object.values(series.value).map((item: any) => {
-      console.log('--------------------------------')
-      console.log('item.name', item.name)
-      console.log('item.ts', item.ts)
-      console.log('item.list', JSON.stringify(item.list))
-      console.log('-----')
-      console.log('pointList', JSON.stringify(pointList.value))
+      // console.log('--------------------------------')
+      // console.log('item.name', item.name)
+      // console.log('item.ts', item.ts)
+      // console.log('item.list', JSON.stringify(item.list))
+      // console.log('-----')
+      // console.log('pointList', JSON.stringify(pointList.value))
       console.log('pointList--length', pointList.value.length)
       console.log('item.list.length', item.list.length)
-      console.log('-----')
-      console.log('props.pushIndex', props.pushIndex)
+      // console.log('-----')
+      // console.log('props.pushIndex', props.pushIndex)
     })
     const seriesData = Object.values(series.value)
         .map((item: any) => ({
