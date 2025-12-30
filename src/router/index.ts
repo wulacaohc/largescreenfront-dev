@@ -3,8 +3,13 @@ import type {RouteRecordRaw} from "vue-router"
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/index',
+    redirect: '/login',
   },
+    {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/login/login.vue'), // 需要创建登录组件
+    },
   {
     path: '/home',
     name: 'home',

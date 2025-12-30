@@ -9,4 +9,5 @@
 import {GETNOBASE} from "./api";
 export * from "./modules/index"
 export * from "./modules/home"
+export * from "./modules/user"; // 添加用户模块导出
 export {GETNOBASE}

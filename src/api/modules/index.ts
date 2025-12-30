@@ -1,4 +1,5 @@
 import {GET,POST,FILE,FILEPOST,PUT,GETNOBASE} from "../api";
+export * from "./user"; // 添加这一行
 const indexUrl=  {
     'leftTop':'/bigscreen/countDeviceNum',//左上
     'leftCenter':'/bigscreen/countUserNum',//左中
