@@ -35,48 +35,6 @@ const formRules = {
 const loginFormRef = ref<any>(null);
 
 /**
- * 模拟登录API请求
- * 实际开发中替换为真实接口地址和参数
- * @returns Promise 登录结果
- */
-// const mockLoginApi = (account: string, password: string): Promise<{
-//   code: number;
-//   msg: string;
-//   data?: { token: string };
-// }> => {
-//   // 模拟假数据 - 实际接口删除这段，替换为真实请求
-//   const mockValidAccount = 'admin';
-//   const mockValidPassword = '123456';
-//
-//   return new Promise((resolve) => {
-//     // 模拟接口延迟
-//     setTimeout(() => {
-//       // 先判断账户是否正确
-//       if (account !== mockValidAccount) {
-//         resolve({ code: 400, msg: '账户不存在' });
-//       }
-//       // 账户正确再判断密码
-//       else if (password !== mockValidPassword) {
-//         resolve({ code: 400, msg: '密码错误' });
-//       }
-//       // 登录成功
-//       else {
-//         resolve({
-//           code: 200,
-//           msg: '登录成功',
-//           data: { token: 'eyJhbGciOiJIUzI1NiJ9.eyJjcmVhdGVkIjoxNzY2OTgw' +
-//                 'MjE2OTc2LCJ1c2VySWQiOiIxMjM0NTU2NiIsInVzZXJuYW1lIjoiMTIzNDU1' +
-//                 'NjYiLCJzdWIiOiIxMjM0NTU2NiIsImlhdCI6MTc2Njk4MDIxNiwiZXhwIjoxNzY2OT' +
-//                 'kxMDE2fQ.AVsjfpSP1S0yBfts8cvzy9BqkS76Qqlua9TQwa4rAhg' }
-//         });
-//       }
-//     }, 800);
-//   });
-// };
-
-
-
-/**
  * 登录提交处理函数
  */
 const handleLogin = async () => {
@@ -86,17 +44,11 @@ const handleLogin = async () => {
     // 开启加载状态
     loginLoading.value = true;
 
-    // 调试：打印实际获取的值
-    console.log('登录参数:', {
-      account: loginForm.account,
-      password: loginForm.password
-    });
     // 调用登录接口
     const res = await userLogin({
       account: loginForm.account,
       password: loginForm.password
     });
-    console.log('登录结果:', res);
 
 // 1. 先校验核心字段的存在性，避免解构报错
     if (res?.success && res?.code === 200) {
@@ -107,8 +59,6 @@ const handleLogin = async () => {
         setLocalStorage(StorageEnum.GB_TOKEN_STORE, token.trim());
         // 验证是否存储成功
         const storedToken = getLocalStorage(StorageEnum.GB_TOKEN_STORE);
-        console.log('存储后验证读取的token:', storedToken);
-        // console.log('存储的token:', token)
         ElMessage.success(res.message || '登录成功');
 
         // 4. 跳转前可加微延迟，确保存储生效（极端场景）
@@ -193,97 +143,97 @@ const handleLogin = async () => {
     </div> <!-- 卡片闭合 -->
 
     <!-- 背景装饰 -->
-    <div class="login-bg-decoration"></div>
+<!--    <div class="login-bg-decoration"></div>-->
   </div> <!-- 容器闭合 -->
 </template>
 
-<style scoped lang="scss">
-// 全局登录容器
+<style scoped lang="scss">// 全局登录容器
 .login-container {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // 使用背景图片替换渐变
+  background: url('@/assets/img/login-bg.png') no-repeat center center fixed;
+  background-size: cover; /* 背景图片覆盖整个容器 */
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
 
-  // 背景装饰效果
-  .login-bg-decoration {
+  // 如果需要添加半透明遮罩层，可以保留
+  &::before {
+    content: '';
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background:
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-    pointer-events: none;
-  }
-}
-
-// 登录卡片
-.login-card {
-  width: 420px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
-  backdrop-filter: blur(8px);
-  padding: 40px 45px;
-  position: relative;
-  z-index: 10;
-
-  // 登录头部
-  .login-header {
-    text-align: center;
-    margin-bottom: 30px;
-
-    h2 {
-      color: #333;
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    p {
-      color: #666;
-      font-size: 14px;
-      margin: 0;
-    }
+    background: rgba(0, 0, 0, 0.4); /* 黑色半透明遮罩，调整透明度来控制明暗 */
+    z-index: 1;
   }
 
-  // 登录表单
-  .login-form {
-    width: 100%;
+  // 登录卡片需要调整层级
+  .login-card {
+    width: 420px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+    backdrop-filter: blur(8px);
+    padding: 40px 45px;
+    position: relative;
+    z-index: 10; /* 确保卡片在遮罩层之上 */
 
-    :deep(.el-form-item) {
-      margin-bottom: 20px;
-    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
 
-    :deep(.el-input) {
-      --el-input-border-radius: 8px;
-      --el-input-hover-border-color: #667eea;
+      h2 {
+        color: #333;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
 
-      input {
+      p {
+        color: #666;
         font-size: 14px;
+        margin: 0;
       }
     }
 
-    .login-btn-item {
-      margin-bottom: 0;
+    .login-form {
+      width: 100%;
 
-      .login-btn {
-        width: 100%;
-        height: 48px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 500;
-        transition: all 0.3s;
+      :deep(.el-form-item) {
+        margin-bottom: 20px;
+      }
 
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+      :deep(.el-input) {
+        --el-input-border-radius: 8px;
+        --el-input-hover-border-color: #667eea;
+
+        input {
+          font-size: 14px;
+        }
+      }
+
+      .login-btn-item {
+        margin-bottom: 0;
+
+        .login-btn {
+          width: 100%;
+          height: 48px;
+          background: linear-gradient(90deg, #667eea, #764ba2);
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 500;
+          transition: all 0.3s;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+          }
         }
       }
     }

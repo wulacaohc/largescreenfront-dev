@@ -5,6 +5,8 @@ import { errorCode } from '@/utils/errorCode';
 import { LoadingInstance } from 'element-plus/es/components/loading/src/loading';
 
 import { ElMessage } from 'element-plus';
+import { getLocalStorage } from '@/utils';
+import { StorageEnum } from '@/enums';
 const encryptHeader = 'encrypt-key';
 let downloadLoadingInstance: LoadingInstance;
 // 是否显示重新登录
@@ -26,11 +28,21 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // 对应国际化资源文件后缀
+    // console.log('进入了拦截器，可以进行拦截操作了');
 
+    // 对应国际化资源文件后缀
     const isToken = config.headers?.isToken === false;
     // 是否需要防止数据重复提交
     const isRepeatSubmit = config.headers?.repeatSubmit === false;
+
+    // 从localStorage获取token并添加到请求头
+    if (!isToken) {
+      const token = getLocalStorage(StorageEnum.GB_TOKEN_STORE);
+      if (token && typeof token === 'string' && token.trim()) {
+        config.headers['Authorization'] = `Bearer ${token.trim()}`;
+        // console.log('Token已添加到请求头');
+      }
+    }
 
 
     // get请求映射params参数
@@ -131,6 +143,17 @@ export function upload(url: string, file: File, params: Record<string, any> = {}
 
 // 导出 axios 实例
 export default service;
+
+/**
+ * 不使用baseURL的GET请求(用于获取本地静态资源)
+ */
+export const GETNOBASE = async (url: string, params: any = {}) => {
+  return service.get(url, {
+    baseURL: '',
+    params
+  });
+};
+
 
 /**
  * 文件下载方法

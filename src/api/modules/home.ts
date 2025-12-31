@@ -1,6 +1,6 @@
-import {GET,POST,FILE,FILEPOST,PUT,GETNOBASE} from "../api";
+// import {GET,POST,FILE,FILEPOST,PUT,GETNOBASE} from "../api";
 import request from '@/utils/request';
-import { AxiosPromise } from 'axios';
+// import { AxiosPromise } from 'axios';
 const indexUrl=  { 
     "centerTop":"/statistics/getTop", //中上
 }

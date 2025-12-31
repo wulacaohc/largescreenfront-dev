@@ -18,31 +18,12 @@ axios.interceptors.request.use(
   function (config: AxiosRequestConfig): any {
       // 初始化 headers（确保不为 undefined）
       config.headers = config.headers || {};
-      console.log('进入了拦截器，可以进行拦截操作了');
     // 在发送请求之前做些什么 传token
     let token: any = getLocalStorage(StorageEnum.GB_TOKEN_STORE);
-      // const token = getLocalStorage(StorageEnum.GB_TOKEN_STORE);
-      console.log('Token 原始值:', token);
-
-      // if (token && typeof token === 'string' && token.trim()) {
-      //     config.headers.Authorization = `Bearer ${token.trim()}`;
-      // }
-      console.log('Token 校验结果:', !!token && typeof token === 'string' && token.trim());
-
-      // if (token && typeof token === 'string' && token.trim()) {
-      //     // 仅当 token 有效时设置
-          // config.headers.common[RequestEnum.GB_TOKEN_KEY] = token.trim();
-      //     // config.headers.Authorization = `Bearer ${token.trim()}`;
-      //     config.headers['Authorization'] = 'Bearer ' + token// 让每个请求携带自定义token 请根据实际情况自行修改
+      if (token && typeof token === 'string' && token.trim()) {
           config.headers['Authorization'] = `Bearer ${token}`;
-      // }
-    // if (token) {
-    //   // @ts-ignore
-    //   // config.headers.common[RequestEnum.GB_TOKEN_KEY] = token;
-    //     // 直接设置到 headers，不需要通过 common
-    //     config.headers = config.headers || {};
-    //     config.headers['Authorization'] = `Bearer ${token}`;
-    // }
+      }
+
     // @ts-ignore
       // 仅当 Content-Type 未设置时，默认赋值（避免覆盖自定义配置）
       if (!config.headers['Content-Type']) {
@@ -53,31 +34,9 @@ axios.interceptors.request.use(
   },
   function (error: any) {
     // 对请求错误做些什么
-    console.log("请求拦截器出错啦，出错啦");
     return Promise.reject(error);
   }
 );
-
-// 添加请求拦截器
-// axios.interceptors.request.use(
-//     function (config: AxiosRequestConfig): any {
-//         // 在发送请求之前做些什么 传token
-//         let token: any = getLocalStorage(StorageEnum.GB_TOKEN_STORE);
-//         if (token) {
-//             // @ts-ignore
-//             config.headers.common[RequestEnum.GB_TOKEN_KEY] = token;
-//         }
-//         // @ts-ignore
-//         config.headers["Content-Type"] = "application/json;charset=utf-8";
-//
-//         return config;
-//     },
-//     function (error: any) {
-//         // 对请求错误做些什么
-//         console.log(error);
-//         return Promise.reject(error);
-//     }
-// );
 
 export type Params = { [key: string]: string | number };
 export type FileConfig = {
@@ -90,8 +49,6 @@ export type FileConfig = {
  */
 axios.interceptors.response.use(
   (response: AxiosResponse) => {
-    // console.log("response", response);
-      console.log('我是回答，我是回答');
     if (response.status !== 200) {
       return Promise.reject(response);
     }
@@ -118,7 +75,6 @@ axios.interceptors.response.use(
       err.msg = "取消请求";
       err.code = 488;
     }
-    // console.log(err);
     return Promise.reject(err);
   }
 );
