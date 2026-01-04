@@ -214,6 +214,7 @@ const handleLogin = async () => {
 
         input {
           font-size: 14px;
+          color: #333; // 设置输入框文字颜色为深灰色
         }
       }
 
