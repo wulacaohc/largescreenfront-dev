@@ -5,7 +5,7 @@ import { errorCode } from '@/utils/errorCode';
 import { LoadingInstance } from 'element-plus/es/components/loading/src/loading';
 import router from '@/router'; // 你的路由实例
 import { ElMessage } from 'element-plus';
-import { getLocalStorage } from '@/utils';
+import { getLocalStorage,setLocalStorage} from '@/utils';
 import { StorageEnum } from '@/enums';
 const encryptHeader = 'encrypt-key';
 let downloadLoadingInstance: LoadingInstance;
@@ -28,6 +28,17 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+
+      // 最大闲置时间：30分钟（和Token有效期一致）
+      const maxIdleTime = 30 * 60 * 1000;
+      if (Date.now() - (window as any).$lastActiveTime.get() > maxIdleTime) {
+          // 用户已闲置30分钟，清空Token并跳登录
+          localStorage.removeItem(StorageEnum.GB_TOKEN_STORE);
+          localStorage.removeItem('lastActiveTime');
+          ElMessage.error('您已长时间未操作，请重新登录');
+          router.push('/login');
+          return Promise.reject('用户闲置超时');
+      }
     // console.log('进入了拦截器，可以进行拦截操作了');
 
     // 对应国际化资源文件后缀
@@ -76,8 +87,21 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
     (res: AxiosResponse) => {
-        console.log('进入了request响应器（仅2xx状态码执行）');
-        console.log('完整响应对象:', res);
+        // console.log('进入了request响应器（仅2xx状态码执行）');
+        // console.log('完整响应对象:', res);
+
+        // ========== 新增核心逻辑：获取并更新刷新后的Token（仅成功响应处理） ==========
+        // ========== 修改刷新逻辑：增加「用户活跃判断」 ==========
+        const refreshToken = res.headers['x-refresh-token'];
+        if (
+            refreshToken && typeof refreshToken === 'string' && refreshToken.trim() &&
+            // (Date.now() - lastActiveTime) < 5 * 60 * 1000 // 5分钟内有手动操作
+                (Date.now() - (window as any).$lastActiveTime.get()) < 5 * 60 * 1000
+        ) {
+            console.log('用户活跃，更新刷新后的Token');
+            setLocalStorage(StorageEnum.GB_TOKEN_STORE, refreshToken.trim());
+        }
+
 
         // 安全访问 res.data
         if (!res || !res.data) {
@@ -87,7 +111,7 @@ service.interceptors.response.use(
 
         // 使用可选链获取code
         const code = res.data?.code || HttpStatus.SUCCESS;
-        console.log('响应结果:', res);
+        // console.log('响应结果:', res);
 
         // 获取错误信息
         const msg = errorCode[code] || res.data.message || errorCode['default'];
@@ -99,7 +123,6 @@ service.interceptors.response.use(
 
         // 这里处理的是「业务码」非HTTP状态码（比如200但业务码401）
         if (code === 401 || code === "401") {
-            console.log('业务码401，要跳转了');
             if (!isRelogin.show) {
                 router.push('/login');
             }
@@ -118,14 +141,13 @@ service.interceptors.response.use(
         }
     },
     (error: any) => {
-        console.log('进入响应错误拦截器（4xx/5xx状态码执行）');
+        // console.log('进入响应错误拦截器（4xx/5xx状态码执行）');
         let { message } = error;
 
         // 解析Axios错误对象，获取响应数据
         const response = error.response;
         // 1. 处理HTTP 401状态码（核心修复点）
         if (response && response.status === 401) {
-            console.log('HTTP状态码401，要跳转登录页了');
             // 解析后端返回的错误信息（{"code":401,"message":"Token 不存在或格式错误"}）
             const errMsg = '登录凭证已过期，请重新登录';
             if (!isRelogin.show) {
