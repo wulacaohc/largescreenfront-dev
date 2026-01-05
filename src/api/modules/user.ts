@@ -4,7 +4,9 @@ import { POST_LOGIN } from "../api";
 // import { POST_FORM } from "../api";
 
 const userUrl = {
-    login: "http://localhost:8081/user/login"
+    // login: "http://localhost:8081/user/login"
+    login: "https://www.gxynai.cn/api/user/login"
+
 };
 
 export default userUrl;

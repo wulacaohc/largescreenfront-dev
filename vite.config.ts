@@ -29,8 +29,8 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       proxy: {
         // 代理规则示例
         '/api': {
-          // target: 'https://www.gxynai.cn/api', // 后端服务器地址
-          target: 'http://localhost:8081', // 后端服务器地址
+          target: 'https://www.gxynai.cn/api', // 后端服务器地址
+          // target: 'http://localhost:8081', // 后端服务器地址
           // target: 'http://dashboard.aistudy.space:8081', // 后端服务器地址
 
           changeOrigin: true, // 是否改变请求源
